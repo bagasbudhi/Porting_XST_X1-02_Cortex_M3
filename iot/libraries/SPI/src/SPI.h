@@ -1,4 +1,7 @@
 
+#ifndef XSTIOT_SPI_H
+#define XSTIOT_SPI_H
+
 #include <stdint.h>
 #include <XST_IOT.h>
 
@@ -17,12 +20,19 @@ enum clockDiv: uint8_t {
 	SPI_CLOCK_DIV2048 = 0b1010,
 	SPI_CLOCK_DIV4096 = 0b1011
 };
-enum dataMode: uint8_t {
-	SPI_MODE0 = 0b00,
-	SPI_MODE1 = 0b01,
-	SPI_MODE2 = 0b10,
-	SPI_MODE3 = 0b11
-};
+
+//enum dataMode: uint8_t {
+//	SPI_MODE0 = 0b00,
+//	SPI_MODE1 = 0b01,
+//	SPI_MODE2 = 0b10,
+//	SPI_MODE3 = 0b11
+//};
+#define dataMode uint32_t
+#define SPI_MODE0 0b00
+#define SPI_MODE1 0b01
+#define SPI_MODE2 0b10
+#define SPI_MODE3 0b11
+
 enum dataOrder: uint8_t {
 	MSBFIRST = 0,
 	LSBFIRST = 1
@@ -39,6 +49,8 @@ private:
 	friend class SPIMaster;
 };
 
+#define SPIClass SPIMaster
+
 class SPIMaster {
 public:
 	//SPIMaster();
@@ -50,9 +62,11 @@ public:
 	}
 	inline void setDataMode(dataMode mode){
 		XSTIOT_SPI->SPCR = (XSTIOT_SPI->SPCR & 0b11110011) | ((uint8_t) mode << XSTIOT_SPI_CPHA_Pos);
-		CMSDK_GPIO1->UB_MASKED[(1<<10)] = (mode >= SPI_MODE2)<<10;
+	if(mode < SPI_MODE2) CMSDK_GPIO9->LB_MASKED[(1<<5)] = 0;
+	else                 CMSDK_GPIO9->LB_MASKED[(1<<5)] = 0xFF;
 	}
-	// setBitOrder()
+	inline void setBitOrder(uint8_t bitOrder) {	}
+	
 	//void begin(void);
 	//void begin(uint8_t pin);
 	void end(void);
@@ -74,3 +88,5 @@ public:
 };
 
 extern SPIMaster SPI;
+
+#endif
