@@ -2,6 +2,7 @@
 #ifndef XSTIOT_SPI_H
 #define XSTIOT_SPI_H
 
+#include <stdlib.h>
 #include <stdint.h>
 #include <XST_IOT.h>
 

@@ -1,6 +1,7 @@
 
 #ifndef Wire_h
 #define Wire_h
+#include <stdlib.h>
 #include <stdint.h>
 #include <XST_IOT.h>
 
