@@ -1,0 +1,30 @@
+#######################################
+# Syntax Coloring Map For Wire
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin				KEYWORD2
+insertKey			KEYWORD2
+insertData			KEYWORD2
+getProcessedData	KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+AES	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+AES_SIZE_128	LITERAL1
+AES_SIZE_192	LITERAL1
+AES_SIZE_256	LITERAL1
