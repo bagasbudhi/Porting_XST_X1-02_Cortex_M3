@@ -48,35 +48,31 @@ private:
 	dataOrder order;
 	dataMode  mode;
 	friend class SPIMaster;
+	friend class SPI_0;
+	friend class SPI_1;
 };
 
-#define SPIClass SPIMaster
+#define SPIClass SPI_0
 
 class SPIMaster {
+	protected:
+	SPI_TypeDef* SPI_dev;
 public:
-	//SPIMaster();
+	SPIMaster(SPI_TypeDef *);
 
 	// old version
 	inline void setClockDivider(clockDiv divider){
-		XSTIOT_SPI->SPCR = (XSTIOT_SPI->SPCR & 0b11111100) | ((uint8_t) divider & 0b11);
-		XSTIOT_SPI->SPER = (XSTIOT_SPI->SPER & 0b11111100) | ((uint8_t) divider >> 2  );
+		SPI_dev->SPCR = (SPI_dev->SPCR & 0b11111100) | ((uint8_t) divider & 0b11);
+		SPI_dev->SPER = (SPI_dev->SPER & 0b11111100) | ((uint8_t) divider >> 2  );
 	}
-	inline void setDataMode(dataMode mode){
-		XSTIOT_SPI->SPCR = (XSTIOT_SPI->SPCR & 0b11110011) | ((uint8_t) mode << XSTIOT_SPI_CPHA_Pos);
-	if(mode < SPI_MODE2) CMSDK_GPIO9->LB_MASKED[(1<<5)] = 0;
-	else                 CMSDK_GPIO9->LB_MASKED[(1<<5)] = 0xFF;
-	}
-	inline void setBitOrder(uint8_t bitOrder) {	}
+	inline void setBitOrder(uint8_t bitOrder) {}
 	
 	//void begin(void);
 	//void begin(uint8_t pin);
-	void end(void);
 	//void end(uint8_t pin);
 
 	// new version
-	void beginTransaction(SPISettings settings);
 	//uint8_t beginTransaction(uint8_t pin, SPISettings settings);
-	inline void endTransaction(void){end();}
 	//uint8_t endTransaction(uint8_t pin);
 	//usingInterrupt()
 
@@ -88,6 +84,42 @@ public:
 	void detachInterrupt(void);
 };
 
-extern SPIMaster SPI;
+class SPI_0 : public SPIMaster
+{
+public:
+	SPI_0(void) : SPIMaster(XSTIOT_SPI) {}
+	inline void setDataMode(dataMode mode)
+	{
+		SPI_dev->SPCR = (SPI_dev->SPCR & 0b11110011) | ((uint8_t)mode << XSTIOT_SPI_CPHA_Pos);
+		// CMSDK_GPIO1->UB_MASKED[(1<<10)] = (mode >= SPI_MODE2)<<10;
+		CMSDK_GPIO9->LB_MASKED[(1 << 5)] = (mode >= SPI_MODE2) << 5;
+	}
+	void end(void);
+
+	// new version
+	void beginTransaction(SPISettings settings);
+	inline void endTransaction(void) { end(); }
+};
+
+class SPI_1 : public SPIMaster
+{
+public:
+	SPI_1(void) : SPIMaster(XSTIOT_SPI1) {}
+	inline void setDataMode(dataMode mode)
+	{
+		SPI_dev->SPCR = (SPI_dev->SPCR & 0b11110011) | ((uint8_t)mode << XSTIOT_SPI_CPHA_Pos);
+		// CMSDK_GPIO1->UB_MASKED[(1<<10)] = (mode >= SPI_MODE2)<<10;
+		CMSDK_GPIO1->LB_MASKED[(1 << 3)] = (mode >= SPI_MODE2) << 3;
+	}
+	void end(void);
+
+	// new version
+	void beginTransaction(SPISettings settings);
+	inline void endTransaction(void) { end(); }
+};
+
+
+extern SPI_0 SPI;
+extern SPI_1 SPI1;
 
 #endif

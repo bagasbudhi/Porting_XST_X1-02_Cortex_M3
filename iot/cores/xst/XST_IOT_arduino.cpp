@@ -25,15 +25,15 @@ UART::UART(CMSDK_UART_TypeDef* UART_arg)
 
 void UART0::begin(uint32_t speed)
 {
-	UART_dev->BAUDDIV = (uint32_t) FOSC / speed;
-	UART_dev->CTRL    = 0x03;
 #ifdef XST_X1_01
 	CMSDK_GPIO1->ALTFUNCSET = 3 << 0; //enable RX and TX
 #else
+	XSTIOT_CLKCON |= (1<<3);
 	CMSDK_GPIO8->PULLUPSET = 3 << 0;
 	CMSDK_GPIO8->ALTFUNCSET = 3 << 0; //enable RX and TX
-	XSTIOT_CLKCON |= (1<<3);
 #endif
+	UART_dev->BAUDDIV = (uint32_t) FOSC / speed;
+	UART_dev->CTRL    = 0x03;
 }
 
 void UART1::begin(uint32_t speed)
@@ -733,12 +733,16 @@ void pwmWrite(uint32_t pin, uint32_t on_cycle)
 	CMSDK_DUALTIMER_SINGLE_TypeDef* CMSDK_DUALTIMERx;
 	if (pin == 4)
 	{
+		XSTIOT_CLKCON |= (1<<2);
+		CMSDK_GPIO8->ALTFUNCSET = 1 << 4;
 		CMSDK_DUALTIMERx = CMSDK_DUALTIMER1;
 		CMSDK_DUALTIMERx->TimerComp = CMSDK_DUALTIMERx->TimerLoad - on_cycle; //dibalik karena down counting
-		CMSDK_DUALTIMERx->TimerControl |= CMSDK_DUALTIMER_CTRL_EN_Msk; //enable PWM and timer
+		CMSDK_DUALTIMERx->TimerControl |= CMSDK_DUALTIMER_CTRL_EN_Msk | (3UL << 10) | (1UL << 8) | CMSDK_DUALTIMER_CTRL_MODE_Msk ; //enable PWM and timer
 	}
 	else if (pin == 5)
 	{
+		XSTIOT_CLKCON |= (1<<23);
+		CMSDK_GPIO8->ALTFUNCSET = 1 << 5; 
 		CMSDK_DUALTIMERx = CMSDK_DUALTIMER2;
 		CMSDK_DUALTIMERx->TimerComp = CMSDK_DUALTIMERx->TimerLoad - on_cycle; //dibalik karena down counting
 		CMSDK_DUALTIMERx->TimerControl |= CMSDK_DUALTIMER_CTRL_EN_Msk; //enable PWM and timer
@@ -749,9 +753,13 @@ void pwmChangeLoad(uint32_t pin, uint32_t load)
 {
 	CMSDK_DUALTIMER_SINGLE_TypeDef* CMSDK_DUALTIMERx;
 	if (pin == 4){
+		XSTIOT_CLKCON |= (1<<2);
+		CMSDK_GPIO8->ALTFUNCSET = 1 << 4; 
 		CMSDK_DUALTIMERx = CMSDK_DUALTIMER1;
-		CMSDK_DUALTIMERx->TimerLoad = load;
+		CMSDK_DUALTIMERx->TimerLoad = load-1 ;
 	}else if (pin == 5){
+		XSTIOT_CLKCON |= (1<<23);
+		CMSDK_GPIO8->ALTFUNCSET = 1 << 5; 
 		CMSDK_DUALTIMERx = CMSDK_DUALTIMER2;
 		CMSDK_DUALTIMERx->TimerLoad = load;
 	}
@@ -799,19 +807,22 @@ void pwmChangeDiv(uint32_t pin, uint32_t prescaler)
 bool update_tone = true;
 // frequency (in hertz) and duration (in milliseconds).
 // max freq is 10 MHz, min freq is 305 Hz
-void tone(uint8_t _pin, unsigned int frequency)
+void tone(uint8_t _pin, unsigned long frequency)
 {
 	if (_pin==4 || _pin==5){
 		pinMode(_pin,OUTPUT);
 		if (update_tone){
-			if (frequency > 10000000){
-				frequency = 10000000;
-			}else if (frequency < 305){
-				frequency = 305;
-			}
-			int load = FOSC/frequency;
+			//if (frequency > 25000000UL){
+			//	frequency = 25000000UL;
+			//}else if (frequency < 305UL){
+		//		frequency = 305UL;
+			//}
+			uint32_t load = FOSC/frequency;
 			pwmChangeLoad(_pin,load);
-			int comp = load/2;
+			uint32_t comp = load/2;
+			if(load & 1){
+				comp++;
+			}
 			pwmWrite(_pin, comp);
 		}
 	}
