@@ -9,7 +9,11 @@
 #include "cmsis_gcc.h"
 
 #ifndef FOSC
+#ifdef XST_X1_01
 #define FOSC 20000000UL
+#else
+#define FOSC 50000000UL
+#endif
 #endif
 
 // -----------------
@@ -51,6 +55,7 @@ typedef void(*voidFuncPtr)(void);
 typedef bool boolean;
 typedef uint8_t byte;
 typedef unsigned int word;
+#define Handler extern "C" void __attribute__ ((section(".after_vectors")))
 
 // ----------------------------
 //   Global Interrupt Control
@@ -255,7 +260,7 @@ void pwmChangeDiv(uint32_t pin, uint32_t prescaler);
 //   Advanced I/O
 // -------------------
 extern bool update_tone;
-void tone(uint8_t _pin, unsigned int frequency);
+void tone(uint8_t _pin, unsigned long frequency);
 void noTone(uint8_t _pin);
 
 
