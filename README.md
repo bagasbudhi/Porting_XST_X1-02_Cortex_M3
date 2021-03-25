@@ -2,4 +2,4 @@
 Porting Library from AVR to Xirka 32-bit XST X1-02 Cortex®-M3 50MHz MCU
 
 
-Currently still in developing
+Currently it is still in the development stage
